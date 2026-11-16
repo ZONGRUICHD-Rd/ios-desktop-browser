@@ -7,12 +7,10 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
         VStack(spacing: 0) {
-            // 地址栏
             HStack(spacing: 8) {
                 Image(systemName: model.currentURL?.scheme == "https" ? "lock.fill" : "lock.open.fill")
                     .foregroundStyle(.secondary)
                     .font(.caption)
-
                 TextField("输入网址或搜索", text: $model.addressText)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
@@ -22,7 +20,6 @@ struct ContentView: View {
                         model.loadAddress(model.addressText)
                         addressFocused = false
                     }
-
                 if !model.addressText.isEmpty {
                     Button {
                         model.addressText = ""
@@ -31,7 +28,6 @@ struct ContentView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-
                 if model.isLoading {
                     Button { model.stop() } label: {
                         Image(systemName: "xmark")
@@ -48,28 +44,19 @@ struct ContentView: View {
             .clipShape(RoundedRectangle(cornerRadius: 10))
             .padding(.horizontal, 12)
             .padding(.top, 8)
-
-            // 加载进度条
             if model.isLoading {
                 ProgressView(value: model.estimatedProgress)
                     .progressViewStyle(.linear)
                     .padding(.horizontal, 12)
                     .padding(.top, 4)
             }
-
-            // 网页本身（WKWebView / WebKit）
             DesktopWebView(model: model)
                 .ignoresSafeArea(.keyboard, edges: .bottom)
-
-            // 底部工具栏
             HStack(spacing: 0) {
                 toolbarButton("chevron.left", disabled: !model.canGoBack) { model.goBack() }
                 toolbarButton("chevron.right", disabled: !model.canGoForward) { model.goForward() }
                 toolbarButton("house", disabled: false) { model.goHome() }
-
                 Spacer()
-
-                // 桌面 / 手机模式切换（默认桌面）
                 Button {
                     model.toggleDesktopMode()
                 } label: {
@@ -81,16 +68,13 @@ struct ContentView: View {
                         .foregroundStyle(model.desktopMode ? .blue : .primary)
                         .clipShape(Capsule())
                 }
-
                 Spacer()
-
                 if let url = model.currentURL {
                     ShareLink(item: url) {
                         Image(systemName: "square.and.arrow.up")
                     }
                     .padding(.horizontal, 12)
                 }
-
                 Button {
                     model.reload()
                 } label: {
@@ -106,7 +90,6 @@ struct ContentView: View {
         }
         .navigationTitle(model.pageTitle.isEmpty ? "桌面浏览器" : model.pageTitle)
         .navigationBarTitleDisplayMode(.inline)
-        }
     }
 
     @ViewBuilder
