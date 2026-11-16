@@ -1,0 +1,64 @@
+name: Build IPA
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Xcode version
+        run: xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Archive (unsigned)
+        run: |
+          xcodebuild -project DesktopBrowser.xcodeproj \
+            -scheme DesktopBrowser \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/DesktopBrowser.xcarchive \
+            archive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+
+      - name: Package IPA
+        run: |
+          mkdir -p Payload
+          cp -r build/DesktopBrowser.xcarchive/Products/Applications/DesktopBrowser.app Payload/
+          zip -r DesktopBrowser.ipa Payload
+          ls -lh DesktopBrowser.ipa
+          unzip -l DesktopBrowser.ipa | head -n 20
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DesktopBrowser-ipa
+          path: DesktopBrowser.ipa
+          if-no-files-found: error
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: DesktopBrowser.ipa
+          generate_release_notes: true
+          body: |
+            桌面浏览器 for iPhone — WebKit 内核，默认桌面版 UA。
+
+            注意：此 IPA 未签名，需用 AltStore / SideStore 以自己的 Apple ID 签名后安装（见 README）。
